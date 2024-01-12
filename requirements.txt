@@ -1,0 +1,7 @@
+streamlit==1.29.0
+matplotlib==3.7.1
+pandas==2.0.3
+plotly==5.9.0
+requests==2.30.0
+folium==0.14.0
+streamlit_folium==0.17.4
