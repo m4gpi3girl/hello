@@ -42,3 +42,5 @@ def main():
 # to run the streamlit app 
 if __name__ == "__main__":
     main()
+
+    st

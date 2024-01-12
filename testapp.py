@@ -12,9 +12,19 @@ from streamlit_folium import folium_static
 
 st.set_page_config(layout='wide', page_title='Test Dashboard')
 
-def read_csv_1(file):
-    df = pd.read_csv(file)
-    return df
+def read_file(file):
+    if file is not None:
+        if file.type == 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+            # Excel file
+            df = pd.read_excel(file)
+        elif file.type == 'text/csv':
+            # CSV file
+            df = pd.read_csv(file)
+        else:
+            st.error("Invalid file format. Please upload a CSV or Excel file.")
+            return None
+        return df
+    return None
 
 # function to extract info from api
 
@@ -63,18 +73,20 @@ def main():
     if secret_key == 'TURBINE':
 
         st.title("Test App")
-
-        uploaded_file = st.file_uploader("Upload your csv containing postcodes. Please make sure your postcode column is called 'Postcode'", type=["csv"])
-
+        
+        uploaded_file = st.file_uploader(
+            "Upload your CSV or Excel file containing postcodes. Please make sure your postcode column is called 'Postcode'",
+            type=["csv", "xlsx"]
+        )
 
         if uploaded_file is not None:
-
-            #st.write(list(imd))
-            #st.write(list(rurb))
-
             st.markdown('### See analysis:')
-
-            df = read_csv_1(uploaded_file)
+            
+            df = read_file(uploaded_file)
+            
+            if df is not None:
+                # Continue with your analysis using the uploaded DataFrame (df)
+                st.write(df.head())
 
             #st.write(df.head())
 
