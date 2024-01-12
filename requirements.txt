@@ -5,3 +5,4 @@ plotly==5.9.0
 requests==2.30.0
 folium==0.14.0
 streamlit_folium==0.17.4
+openpyxl==3.0.10
