@@ -186,6 +186,8 @@ def main():
             geo_df = geo_df.drop(columns=[
                 'lsoa code (2011)_y',
                 'lsoa code (2011)_x',
+                'lsoa code (2021)_y',
+                'lsoa code (2021)_x'
                 'Latitude_y',
                 'Longitude_y',
                 'LSOA Code_x',
@@ -193,40 +195,51 @@ def main():
                 'Region_y',
             ])
             # rename
+            geo_df = geo_df.rename(columns={
+                'Charity Postcode': 'Postcode',
+                'Latitude_x':'lat',
+                'Longitude_x':'lon',
+                'Region_x':'Region'
+            })
+            # ------------------------------------------------------------------------
 
+            # check cols
             st.write(geo_df.head())
             
-            #st.write(imd_df)
-            #st.write(rurb_df)
-
-            regions = ['All'] + list(imd_df['Region'].unique())
+            # organising filters ---------------------------------------------------------
+            regions = ['All'] + list(geo_df['Region'].unique())
             selected_region = st.selectbox('Filter by Region', regions)
 
             if selected_region == 'All':
-                filter_imd_df = imd_df
+                filter_df = geo_df
             else:
-                filter_imd_df = imd_df[imd_df['Region'] == selected_region]
+                filter_df = geo_df[geo_df['Region'] == selected_region]
+            # -----------------------------------------------------------------------------
 
-            total_rows = len(filter_imd_df)
-            imd_123 = len(filter_imd_df[filter_imd_df['IMD dec'].isin([1, 2, 3])])
+            # calculating metric values based on filters ----------------------------------
+            total_rows = len(filter_df)
+            imd_123 = len(filter_df[filter_df['IMD dec'].isin([1, 2, 3])])
             percentage_in_lowest = round((imd_123 / total_rows) * 100)
 
-            imd_8910 = len(filter_imd_df[filter_imd_df['IMD dec'].isin([8, 9, 10])])
+            imd_8910 = len(filter_df[filter_df['IMD dec'].isin([8, 9, 10])])
             percentage_in_highest = round((imd_8910 / total_rows) * 100)
 
-            plot_df = filter_imd_df.groupby('IMD dec').size().reset_index(name='Count')
+            plot_df = filter_df.groupby('IMD dec').size().reset_index(name='Count')
+            # ------------------------------------------------------------------------------
 
-            col1, col2, col3 = st.columns(3)
-
+            # displaying metrics -----------------------------------------------------------
+            col1, col2, col3, col4 = st.columns(4)
             with col1:
-                st.metric(label='Average IMD', value = round(imd_df['IMD dec'].mean()))
+                st.metric(label='Total Postcodes', value=total_rows)
             with col2:
-                st.metric(label='Percentage of Postcodes in IMD 1 to 3', value=percentage_in_lowest)
+                st.metric(label='Average IMD', value = round(filter_df['IMD dec'].mean()))
             with col3:
+                st.metric(label='Percentage of Postcodes in IMD 1 to 3', value=percentage_in_lowest)
+            with col4:
                 st.metric(label='Percentage of Postcodes in IMD 8 to 10', value=percentage_in_highest)
-
-            #st.write(plot_df)
-
+            # -----------------------------------------------------------------------------------------
+                
+            # visuals ---------------------------------------------------------------------------------
             fig1, fig2 = st.columns(2)
 
             with fig1:
@@ -238,10 +251,10 @@ def main():
 
                 m = folium.Map(location=[mean_lat, mean_lon], zoom_start=6)
 
-                for idx, row in filter_imd_df.iterrows():
-                    postcode = row['Charity Postcode']
-                    lat = row['Latitude']
-                    lon = row['Longitude']
+                for idx, row in filter_df.iterrows():
+                    postcode = row['Postcode']
+                    lat = row['lat']
+                    lon = row['lon']
                     marker_text = f"Postcode: {postcode}"
 
                     folium.Marker(
@@ -251,7 +264,31 @@ def main():
                     ).add_to(m)
 
                 folium_static(m)
+            # --------------------------------------------------------------------------
 
+            # download info --------------------------------------------------------------
+            st.subheader('Thank you for using this prototype app. If you would like to download the data, please see below!')
 
+            if st.button("Download IMD Data as CSV"):
+                csv_file = imd_df.to_csv(index=False)
+                st.download_button(
+                    label="Download CSV",
+                    data = csv_file,
+                    file_name="IMD Postcode Data.csv",
+                    mime="text/csv"
+                )
+            
+            if st.button("Download Rural/Urban Data as CSV"):
+                csv_file = rurb_df.to_csv(index=False)
+                st.download_button(
+                    label="Download CSV",
+                    data=csv_file,
+                    file_name="Rural Urban Postcode Data",
+                    mime="text/csv"
+                )
+            # -------------------------------------------------------------------------------------
+
+# -----------------------------------------------
 if __name__ == '__main__':
     main()
+# -----------------------------------------------
