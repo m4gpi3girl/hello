@@ -183,17 +183,7 @@ def main():
             rurb_df = pd.merge(output_df, rurb, left_on='LSOA Code', right_on='lsoa code (2011)', how='left')
             geo_df = pd.merge(imd_df, rurb_df, on='Charity Postcode', how='left')
             # clean data
-            geo_df = geo_df.drop(columns=[
-                'lsoa code (2011)_y',
-                'lsoa code (2011)_x',
-                'lsoa code (2021)_y',
-                'lsoa code (2021)_x'
-                'Latitude_y',
-                'Longitude_y',
-                'LSOA Code_x',
-                'LSOA Code_y',
-                'Region_y',
-            ])
+            geo_df = geo_df.drop(columns=['lsoa code (2011)_y', 'lsoa code (2011)_x', 'lsoa code (2021)_y', 'lsoa code (2021)_x', 'Latitude_y', 'Longitude_y', 'LSOA Code_x', 'LSOA Code_y', 'Region_y'])
             # rename
             geo_df = geo_df.rename(columns={
                 'Charity Postcode': 'Postcode',
