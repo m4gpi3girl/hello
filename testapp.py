@@ -220,7 +220,7 @@ def main():
             # displaying metrics -----------------------------------------------------------
             col1, col2, col3, col4 = st.columns(4)
             with col1:
-                st.metric(label='Total Postcodes', value=total_rows)
+                st.metric(label='Total Postcodes', value=filter_df['Postcode'].nunique())
             with col2:
                 st.metric(label='Average IMD', value = round(filter_df['IMD dec'].mean()))
             with col3:
