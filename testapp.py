@@ -1,18 +1,47 @@
+# import packages
+# ------------------------------------------------------------------
+# for making api request
 import requests
+# for api data
 import json
+
+# obv pandas
 import pandas as pd
+# always import this never use it but its habit at this point
 import numpy as np
+
+# for streamlit
 import streamlit as st
+# for folium maps in streamlit
 import streamlit_folium
-import matplotlib.pyplot as plt
-import plotly
-import plotly.express as px
-import folium
+# to keep the map on the page 
 from streamlit_folium import folium_static
+
+# folium for maps
+import folium
+
+# data viz
+import matplotlib.pyplot as plt
+# data viz
+import plotly
+# data viz
+import plotly.express as px
+
+# for reading excel
 import openpyxl
+# ------------------------------------------------------------------
 
+
+
+
+# set page configuration
+# ------------------------------------------------------------------
 st.set_page_config(layout='wide', page_title='Test Dashboard')
+# -------------------------------------------------------------------
 
+
+# a function to read the user imported file and read it into pandas df
+# --------------------------------------------------------------------
 def read_file(file):
     if file is not None:
         if file.type == 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
@@ -26,9 +55,12 @@ def read_file(file):
             return None
         return df
     return None
+# ---------------------------------------------------------------------
 
-# function to extract info from api
 
+
+# function to extract lat, lon and other geographic info from api
+# -----------------------------------------------------------------
 def bulk_pc_lookup(postcodes):
     # set up the api request
     url = "https://api.postcodes.io/postcodes"
@@ -57,56 +89,113 @@ def bulk_pc_lookup(postcodes):
                     latitude = result["result"]["latitude"]
                     longitude = result["result"]["longitude"]
                     region = result["result"]["region"]
-                    postcode_data.append({"Charity Postcode": postcode, "Latitude": latitude, "Longitude": longitude, "LSOA Code": lsoa, "Region": region})
+                    postcode_data.append({"Charity Postcode": postcode, 
+                                          "Latitude": latitude, 
+                                          "Longitude": longitude, 
+                                          "LSOA Code": lsoa, 
+                                          "Region": region})
         else:
             # handle errors for each batch
             print(f"Error in batch: {response.status_code}")
     
     return postcode_data
+# --------------------------------------------------------------------------------
 
+
+# main stramlit app - all code
+# -----------------------------------------------------------------------------------
 def main():
 
+    # read imd and rural urban info
+    # --------------------------------------------
+    # imd
     imd = pd.read_csv('imd condensed.csv')
+    # rural urban
     rurb = pd.read_csv('rural urban.csv')
+    # merged
+    geo_df = pd.merge(rurb, imd, on='lsoa code (2011)')
+    # --------------------------------------------------
 
+
+
+
+
+    # enter secret key to proceed with app
+    # --------------------------------------------------
     secret_key = st.text_input("Enter the password: ")
 
     if secret_key == 'TURBINE':
 
+        # app title
         st.title("Test App")
         
+        # user can upload file
         uploaded_file = st.file_uploader(
             "Upload your CSV or Excel file containing postcodes. Please make sure your postcode column is called 'Postcode'",
             type=["csv", "xlsx"]
         )
 
+        # to do if the file is accepted
         if uploaded_file is not None:
-            st.markdown('### See analysis:')
             
+            # read user input data
             df = read_file(uploaded_file)
             
-            if df is not None:
+            #if df is not None:
                 # Continue with your analysis using the uploaded DataFrame (df)
-                st.write(df.head())
-
+                #st.write(df.head())
             #st.write(df.head())
 
+            # read postcode column as a list
             postcodes = df['Postcode'].tolist()
 
+            # run postcodes through the api function
             output = bulk_pc_lookup(postcodes)
 
+            # convert to pandas df
             output_df = pd.DataFrame(output)
 
+            # count number of matches
             total_matches = output_df.shape[0]
 
+            # number of postcodes in user uploaded data
             total_postcodes = df.shape[0]
             
+            # text showing how many matches found
             st.write(f"Matches found for {total_matches} out of {total_postcodes} postcodes")
-            #st.write(output_df)
+            
+            # if wanting to see ones that didnt match-------------------------------------------------
+            if st.button('See rows with no match'):
+                df1 = df
+                df2 = output_df
+                df2 = df2.rename(columns={'Charity Postcode':'Postcode'})
+                # Merge the dataframes based on the specified columns
+                merged_df = pd.merge(df1, df2, on='Postcode', how='left', indicator=True)
+                # Create a third dataframe containing rows from df1 not present in df2
+                not_in_df2 = merged_df[merged_df['_merge'] == 'left_only'].drop('_merge', axis=1)
+                st.write(not_in_df2)
+            # -----------------------------------------------------------------------------------------------
 
+
+            #st.write(output_df)
+            # merge all data ---------------------------------------------------------------------------------
             imd_df = pd.merge(output_df, imd, left_on='LSOA Code', right_on='lsoa code (2011)', how='left')
             rurb_df = pd.merge(output_df, rurb, left_on='LSOA Code', right_on='lsoa code (2011)', how='left')
+            geo_df = pd.merge(imd_df, rurb_df, on='Charity Postcode', how='left')
+            # clean data
+            geo_df = geo_df.drop(columns=[
+                'lsoa code (2011)_y',
+                'lsoa code (2011)_x',
+                'Latitude_y',
+                'Longitude_y',
+                'LSOA Code_x',
+                'LSOA Code_y',
+                'Region_y',
+            ])
+            # rename
 
+            st.write(geo_df.head())
+            
             #st.write(imd_df)
             #st.write(rurb_df)
 
