@@ -256,10 +256,10 @@ def main():
                 folium_static(m)
             # --------------------------------------------------------------------------
 
-            plot_df_2 = filter_df.groupby('rural urban').size().reset_index(name='Count')
+            #plot_df_2 = filter_df.groupby('rural urban').size().reset_index(name='Count')
             
-            fig3 = px.pie(plot_df_2, values='Count', names=plot_df_2.index, title='Rural/Urban Breakdown')
-            st.write(fig3)
+            #fig3 = px.pie(plot_df_2, values='Count', names=plot_df_2.index, title='Rural/Urban Breakdown')
+            #st.write(fig3)
 
             # download info --------------------------------------------------------------
             st.subheader('Thank you for using this prototype app. If you would like to download the data, please see below!')
