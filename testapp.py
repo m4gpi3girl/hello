@@ -256,8 +256,9 @@ def main():
                 folium_static(m)
             # --------------------------------------------------------------------------
 
-            rurb_counts = filter_df['rural urban'].value_counts()
-            fig3 = px.pie(rurb_counts, values=rurb_counts.value_counts(), names=rurb_counts.index, title='Rural/Urban Breakdown')
+            plot_df_2 = filter_df.groupby('rural urban').size().reset_index(name='Count')
+            
+            fig3 = px.pie(plot_df_2, values='Count', names=plot_df_2.index, title='Rural/Urban Breakdown')
             st.write(fig3)
 
             # download info --------------------------------------------------------------
