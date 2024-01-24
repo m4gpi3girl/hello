@@ -256,6 +256,10 @@ def main():
                 folium_static(m)
             # --------------------------------------------------------------------------
 
+            rurb_counts = filter_df['rural urban'].value_counts()
+            fig3 = px.pie(rurb_counts, values=rurb_counts.value_counts(), names=rurb_counts.index, title='Rural/Urban Breakdown')
+            st.write(fig3)
+
             # download info --------------------------------------------------------------
             st.subheader('Thank you for using this prototype app. If you would like to download the data, please see below!')
 
